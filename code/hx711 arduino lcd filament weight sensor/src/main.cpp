@@ -7,6 +7,8 @@
 const int LOADCELL_DT_PIN = 5;
 const int LOADCELL_SCK_PIN = 6;
 
+#define CALIBRATION_FACTOR 207.09 // In our case, the reading is 54672. The known weight is 264g, so our calibration factor will be: 54672/264 = 207.09
+
 HX711 scale;
 LiquidCrystal_I2C lcd(0x27, 16, 2); // set the LCD address to 0x27 for a 16 chars and 2 line display
 
@@ -16,6 +18,8 @@ void setup()
   scale.begin(LOADCELL_DT_PIN, LOADCELL_SCK_PIN);
   lcd.init(); // initialize the lcd
   lcd.backlight();
+  scale.set_scale(CALIBRATION_FACTOR); // this value is obtained by calibrating the scale with known weights
+  scale.tare();                        // reset the scale to 0
 }
 
 void loop()
@@ -28,12 +32,14 @@ void loop()
   {
     /* The code is reading the average value from the HX711 scale using the `scale.read_average()`
     function. The argument `8` specifies the number of readings to average. */
-    long reading = scale.read_average(8);
+    long reading = scale.get_units(8);
     Serial.print("HX711 reading: ");
     Serial.println(reading);
     lcd.clear();
     lcd.setCursor(0, 0);
+    lcd.print("Weight:");
     lcd.print(reading);
+    lcd.print("g");
   }
   else
   {
